@@ -1,0 +1,39 @@
+# 本地配置与密钥（.env.example 保留入库）
+.env
+.env.*
+!.env.example
+
+# 业务数据：客户上传的交付包/演示视频、数据库备份
+server/data/
+server/backups/
+# 自动化测试用的临时上传与备份目录（见 server/tests/conftest.py）
+server/backups-test/
+
+# 打包与备份归档、日志
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.sql.gz
+*.log
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+
+# Node
+node_modules/
+# 前端构建产物由 npm run build 生成，不入库
+web/dist/
+
+# 本机工具状态
+.mimosa/
+.v2c/
+.video_agent/
+
+# 系统杂项
+.DS_Store
+Thumbs.db

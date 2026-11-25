@@ -1,0 +1,219 @@
+/* Art Design Pro 对齐的设计令牌（v1.15）
+ * 暗色优先；所有页面/图表/EP 覆盖只引用这里的语义变量。
+ */
+:root,
+html.dark {
+  --font-sans: Inter, "SF Pro Text", "PingFang SC", "Hiragino Sans GB",
+    "Microsoft YaHei", "Noto Sans CJK SC", "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", "Cascadia Code", "SFMono-Regular", Consolas, monospace;
+
+  --bg: #070707;
+  --bg-soft: #0b0b0d;
+  --card: #161618;
+  --card-2: #1c1c1f;
+  --card-3: #202024;
+  --elevated: #252530;
+  --sidebar-bg: #101012;
+  --topbar-bg: rgba(13, 13, 14, 0.86);
+  --glass: rgba(22, 22, 24, 0.72);
+  --overlay: rgba(0, 0, 0, 0.62);
+
+  --text: #e9e9ef;
+  --text-2: #9a9aad;
+  --text-3: #73738c;
+  --text-4: #55556b;
+  --text-inverse: #0b0b0d;
+
+  --brand: #5d87ff;
+  --brand-2: #7a9eff;
+  --brand-3: #4a6fe0;
+  --brand-weak: rgba(93, 135, 255, 0.13);
+  --brand-weak-2: rgba(93, 135, 255, 0.22);
+  --brand-grad: linear-gradient(135deg, #5d87ff 0%, #8aa8ff 100%);
+  --brand-glow: 0 8px 30px rgba(93, 135, 255, 0.28);
+
+  --success: #13deb9;
+  --success-weak: rgba(19, 222, 185, 0.12);
+  --warning: #ffae1f;
+  --warning-weak: rgba(255, 174, 31, 0.13);
+  --danger: #ff4d4f;
+  --danger-weak: rgba(255, 77, 79, 0.12);
+  --info: #38c0fc;
+  --info-weak: rgba(56, 192, 252, 0.12);
+  --purple: #b48df3;
+  --purple-weak: rgba(180, 141, 243, 0.13);
+
+  --border: rgba(255, 255, 255, 0.08);
+  --border-2: rgba(255, 255, 255, 0.12);
+  --border-3: rgba(255, 255, 255, 0.18);
+  --hover: #23232c;
+  --active: #1d1d23;
+  --el-active: #2e2e38;
+
+  --radius-xs: 6px;
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-pill: 999px;
+
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.18);
+  --shadow-pop: 0 16px 48px rgba(0, 0, 0, 0.5);
+  --shadow-drawer: -24px 0 64px rgba(0, 0, 0, 0.42);
+  --shadow-glow: 0 0 0 1px rgba(93, 135, 255, 0.12), 0 8px 32px rgba(93, 135, 255, 0.14);
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 32px;
+  --space-8: 40px;
+
+  --fs-xs: 11px;
+  --fs-sm: 12px;
+  --fs-base: 13px;
+  --fs-md: 14px;
+  --fs-lg: 16px;
+  --fs-xl: 18px;
+  --fs-2xl: 22px;
+  --fs-3xl: 28px;
+
+  --topbar-h: 60px;
+  --tabs-h: 44px;
+  --sidebar-w: 230px;
+  --sidebar-collapsed: 64px;
+  --content-gap: 20px;
+  --content-pad: 20px;
+
+  --page-max: 1680px;
+  --settings-max: var(--page-max);
+  --public-max: 920px;
+  --deliver-max: 940px;
+  --screen-max: 1680px;
+
+  --status-pending: #9a9aad;
+  --status-in_progress: #ffae1f;
+  --status-completed: #13deb9;
+  --status-closed: #5d87ff;
+  --status-after_sale: #ff4d4f;
+  --status-cancelled: #73738c;
+  --cat-code: #5d87ff;
+  --cat-design: #b48df3;
+  --cat-thesis: #13deb9;
+
+  --chart-axis: rgba(255, 255, 255, 0.1);
+  --chart-split: rgba(255, 255, 255, 0.055);
+  --chart-label: #8f8fa3;
+  --chart-label-2: #73738c;
+  --chart-ring: #161618;
+  --chart-tooltip: rgba(10, 10, 12, 0.92);
+  --chart-tooltip-border: rgba(255, 255, 255, 0.12);
+
+  --preview-bg: #101012;
+  --preview-accent: #7f9bff;
+  --code-bg: #0b0b0d;
+  --code-border: rgba(255, 255, 255, 0.08);
+
+  --z-sidebar: 60;
+  --z-topbar: 50;
+  --z-tabs: 40;
+  --z-dropdown: 2000;
+  --z-modal: 3000;
+  color-scheme: dark;
+}
+
+html.light {
+  --bg: #f6f8fb;
+  --bg-soft: #f0f3f8;
+  --card: #ffffff;
+  --card-2: #f7f9fc;
+  --card-3: #eef2f7;
+  --elevated: #ffffff;
+  --sidebar-bg: #ffffff;
+  --topbar-bg: rgba(255, 255, 255, 0.88);
+  --glass: rgba(255, 255, 255, 0.78);
+  --overlay: rgba(15, 23, 42, 0.38);
+
+  --text: #1f2740;
+  --text-2: #5f6b85;
+  --text-3: #8a94a8;
+  --text-4: #aab2c2;
+  --text-inverse: #ffffff;
+
+  --brand-weak: rgba(93, 135, 255, 0.1);
+  --brand-weak-2: rgba(93, 135, 255, 0.16);
+  --brand-glow: 0 8px 26px rgba(93, 135, 255, 0.18);
+
+  --border: rgba(16, 24, 40, 0.08);
+  --border-2: rgba(16, 24, 40, 0.12);
+  --border-3: rgba(16, 24, 40, 0.18);
+  --hover: #eef2f8;
+  --active: #f2f5fa;
+  --el-active: #eef2f8;
+
+  --shadow-card: 0 1px 2px rgba(16, 24, 40, 0.04);
+  --shadow-pop: 0 16px 48px rgba(16, 24, 40, 0.14);
+  --shadow-drawer: -24px 0 64px rgba(16, 24, 40, 0.12);
+  --shadow-glow: 0 0 0 1px rgba(93, 135, 255, 0.1), 0 8px 30px rgba(93, 135, 255, 0.1);
+
+  --chart-axis: #e3e8f0;
+  --chart-split: #eef2f7;
+  --chart-label: #6b7791;
+  --chart-label-2: #8a94a8;
+  --chart-ring: #ffffff;
+  --chart-tooltip: rgba(255, 255, 255, 0.96);
+  --chart-tooltip-border: rgba(16, 24, 40, 0.1);
+
+  --preview-bg: #f8f9fc;
+  --preview-accent: #3f6ad8;
+  --code-bg: #f6f7f9;
+  --code-border: rgba(16, 24, 40, 0.08);
+  color-scheme: light;
+}
+
+
+/* ===== 4K / ultra-wide ===== */
+@media (min-width: 2200px) {
+  :root, html.dark, html.light {
+    --sidebar-w: 260px;
+    --sidebar-collapsed: 74px;
+    --topbar-h: 66px;
+    --tabs-h: 48px;
+    --content-pad: 24px;
+    --content-gap: 24px;
+    --page-max: 2200px;
+    --settings-max: var(--page-max);
+    --public-max: 1180px;
+    --deliver-max: 1200px;
+    --screen-max: 2200px;
+  }
+}
+
+@media (min-width: 3000px) {
+  :root, html.dark, html.light {
+    --sidebar-w: 288px;
+    --sidebar-collapsed: 84px;
+    --topbar-h: 76px;
+    --tabs-h: 52px;
+    --content-pad: 32px;
+    --content-gap: 28px;
+    --page-max: 3000px;
+    --settings-max: var(--page-max);
+    --public-max: 1400px;
+    --deliver-max: 1500px;
+    --screen-max: 3000px;
+
+    --fs-xs: 12px;
+    --fs-sm: 13px;
+    --fs-base: 14px;
+    --fs-md: 15px;
+    --fs-lg: 18px;
+    --fs-xl: 20px;
+    --fs-2xl: 24px;
+    --fs-3xl: 32px;
+  }
+}
+
