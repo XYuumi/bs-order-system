@@ -1,33 +1,25 @@
-<div align="center">
-
-<img src="docs/screenshots/logo.svg" alt="logo" width="88" height="88">
+<img src="docs/screenshots/logo.svg" alt="logo" width="104" align="right" />
 
 # 毕设接单管理系统
 
 **面向论文 / 程序设计接单团队的一站式订单管理后台**
 
-订单全生命周期 · 需求书智能生成 · 交付物管理 · 双价格体系 · 数据看板 · AI 参谋 · 代理开放 API
+[![License](https://img.shields.io/github/license/XYuumi/bs-order-system?style=flat-square&color=3b82f6)](LICENSE) [![Version](https://img.shields.io/badge/version-1.25.2-22c55e?style=flat-square)](CHANGELOG.md) ![Vue 3](https://img.shields.io/badge/Vue-3-42b883?style=flat-square) ![FastAPI](https://img.shields.io/badge/FastAPI-Python-009688?style=flat-square) ![MySQL 8.0](https://img.shields.io/badge/MySQL-8.0-4479a1?style=flat-square)
 
-[![License](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-1.25.2-brightgreen.svg)](CHANGELOG.md)
-![Vue 3](https://img.shields.io/badge/Vue-3-42b883.svg)
-![Element Plus](https://img.shields.io/badge/Element%20Plus-2-409eff.svg)
-![FastAPI](https://img.shields.io/badge/FastAPI-Python-009688.svg)
-![MySQL 8](https://img.shields.io/badge/MySQL-8.0-4479a1.svg)
-
-[功能特性](#功能特性) · [界面预览](#界面预览) · [快速开始](#快速开始) · [角色与权限](#角色与权限) · [文档](#更多文档) · [许可证](#许可证)
-
-</div>
-
----
+[功能特性](#功能特性) · [快速开始](#快速开始) · [角色与权限](#角色与权限) · [文档](#更多文档) · [许可证](#许可证)
 
 ## 简介
 
 接单做毕业设计（论文、程序、论文 + 程序），杂事很多：谁下的单、什么品质、交期到哪天、需求书怎么写、程序包和演示视频放哪、代理该结算多少、哪几单快逾期了。用表格和聊天记录来管，迟早会乱。
 
-**毕设接单管理系统**把这些流程收进一个后台：代理建单，写手制作，管理员统筹；需求书可由 AI 生成并在线编辑、一键导出 Word；交付物挂在订单上，客户凭链接免登录验收；价格按角色隔离，代理和写手各看各的。
+**毕设接单管理系统**把这些流程收进一个后台：
 
-系统为单机部署设计：**一个 FastAPI 进程同时提供 API、页面和文件下载**，配合一个 MySQL 即可运行。
+- **订单一条线**：代理建单、写手制作、管理员统筹，状态、交期和交付物都挂在订单上
+- **需求书**：AI 生成、在线编辑、一键导出 Word
+- **客户交付**：客户凭链接免登录验收、下载交付物
+- **价格隔离**：成交价与写手价分开，不同角色各看各的
+
+部署很简单：**一个 FastAPI 进程同时提供 API、页面和文件下载**，配上 MySQL 即可运行。
 
 ![工作台](docs/screenshots/dashboard.png)
 
@@ -72,24 +64,6 @@
 - **代理开放 API**（`/api/v1`）：`X-API-Key` 鉴权，代理可用自己的系统建单、回传状态、拉取需求书与附件，接口说明见应用内「开发者 → API 对接」页。
 - **安全**：JWT（HttpOnly Cookie）+ 主动吊销、可选 TOTP 两步验证、敏感操作密码二次确认、上传类型与大小白名单、全参数化 SQL、登录 / 上传 / AI 等接口限流、仅可信代理解析转发头。
 - **运维**：加密备份与恢复、系统健康页、操作日志、Webhook 通知（企业微信 / 钉钉）、可选 Redis（多 worker 时共享限流与 WebSocket 广播）。
-
-## 界面预览
-
-| 订单管理 | 订单详情 |
-|---|---|
-| ![订单管理](docs/screenshots/orders.png) | ![订单详情](docs/screenshots/order-detail.png) |
-| **需求书编辑** | **生产看板** |
-| ![需求书编辑](docs/screenshots/doc-editor.png) | ![生产看板](docs/screenshots/board.png) |
-| **订单日历** | **对账单** |
-| ![订单日历](docs/screenshots/calendar.png) | ![对账单](docs/screenshots/settlement.png) |
-| **经营大屏** | **毛利分析** |
-| ![经营大屏](docs/screenshots/screen.png) | ![毛利分析](docs/screenshots/margin.png) |
-
-**移动端自适应**（工作台 / 订单列表 / 订单详情 / 需求书编辑）
-
-![移动端](docs/screenshots/mobile.png)
-
-> 截图均在演示环境用虚构数据截取。
 
 ## 角色与权限
 
