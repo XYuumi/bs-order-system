@@ -3,7 +3,7 @@
     <PageSkeleton v-if="loading && !loaded" />
 
     <template v-else>
-      <!-- 欢迎横幅：暗色流星 + 品牌渐变 -->
+      <!-- 欢迎横幅：暗色流星 + 品牌渐变。两行：问候与日期 / 标题与操作，尽量少占首屏 -->
       <section class="welcome art-card">
         <div class="welcome-glow" />
         <div class="meteors" aria-hidden="true">
@@ -12,27 +12,37 @@
         <div class="welcome-main">
           <div class="welcome-eyebrow">
             <span class="live-dot art-dot-breathe" />
-            {{ greeting }}，{{ displayName }}
+            {{ greeting }}，{{ displayName }} · {{ todayLabel }} · 数据更新于 {{ updatedText }}
           </div>
-          <h2 class="welcome-title">把每一单，交付得漂亮。</h2>
-          <p class="welcome-sub">{{ todayLabel }} · {{ currentMonth }} · 数据更新于 {{ updatedText }}</p>
-          <div class="welcome-actions">
-            <!-- 写手不负责建单（路由只放开给管理员与代理），这里对他们隐藏 -->
-            <button v-if="!auth.isStaffView || auth.isAdmin" class="w-btn primary" @click="router.push('/orders/create')">
-              <Icon icon="ri:add-line" /> 新建订单
-            </button>
-            <button v-if="auth.isAdmin" class="w-btn" @click="openReport">
-              <Icon icon="ri:sparkling-2-line" /> AI 经营报告
-            </button>
-            <button class="w-btn ghost" @click="load">
-              <Icon icon="ri:refresh-line" :class="{ spin: loading }" /> 刷新数据
-            </button>
-            <button v-if="gridActive" class="w-btn ghost" @click="resetLayout">
-              <Icon icon="ri:layout-line" /> 重置布局
-            </button>
-            <button v-if="auth.isAdmin || auth.isAgent" class="w-btn ghost" @click="saveAsDefault">
-              <Icon icon="ri:save-3-line" /> 存为默认布局
-            </button>
+          <div class="welcome-row">
+            <h2 class="welcome-title">把每一单，交付得漂亮。</h2>
+            <div class="welcome-actions">
+              <!-- 写手不负责建单（路由只放开给管理员与代理），这里对他们隐藏 -->
+              <button v-if="!auth.isStaffView || auth.isAdmin" class="w-btn primary" @click="router.push('/orders/create')">
+                <Icon icon="ri:add-line" /> 新建订单
+              </button>
+              <button v-if="auth.isAdmin" class="w-btn" @click="openReport">
+                <Icon icon="ri:sparkling-2-line" /> AI 经营报告
+              </button>
+              <button class="w-btn ghost" title="刷新数据" @click="load">
+                <Icon icon="ri:refresh-line" :class="{ spin: loading }" /> 刷新
+              </button>
+              <!-- 「重置布局 / 存为默认布局」不常用，收进下拉，按钮行不至于太挤 -->
+              <el-dropdown
+                v-if="gridActive || auth.isAdmin || auth.isAgent"
+                trigger="click" @command="onLayoutCommand"
+              >
+                <button class="w-btn ghost">
+                  <Icon icon="ri:layout-line" /> 布局 <Icon icon="ri:arrow-down-s-line" />
+                </button>
+                <template #dropdown>
+                  <el-dropdown-menu>
+                    <el-dropdown-item v-if="gridActive" command="reset"><Icon icon="ri:layout-line" />重置布局</el-dropdown-item>
+                    <el-dropdown-item v-if="auth.isAdmin || auth.isAgent" command="save"><Icon icon="ri:save-3-line" />存为默认布局</el-dropdown-item>
+                  </el-dropdown-menu>
+                </template>
+              </el-dropdown>
+            </div>
           </div>
         </div>
         <div class="welcome-side">
@@ -63,30 +73,32 @@
         />
       </div>
 
-      <!-- 交期风险 -->
+      <!-- 交期风险：一条横向状态条（标题 / 计数 / 明细 / 链接），没有风险时不占大块空白 -->
       <section class="risk-card art-card">
-        <div class="rc-head">
-          <div class="rc-title">
-            <span class="rc-ico"><Icon icon="ri:alarm-warning-line" /></span>
-            <div><h4>交期风险</h4><p>逾期与 {{ risk.days || 3 }} 天内到期的进行中订单</p></div>
+        <div class="rc-title">
+          <span class="rc-ico"><Icon icon="ri:alarm-warning-line" /></span>
+          <div>
+            <h4>交期风险</h4>
+            <p>逾期与 {{ risk.days || 3 }} 天内到期</p>
           </div>
-          <router-link to="/orders" class="link">查看全部 <Icon icon="ri:arrow-right-s-line" /></router-link>
         </div>
-        <div class="rc-body">
-          <div class="rc-counts">
-            <div class="rc-count danger"><b>{{ risk.summary?.overdue ?? 0 }}</b><span>已逾期</span></div>
-            <div class="rc-count warn"><b>{{ risk.summary?.soon ?? 0 }}</b><span>即将到期</span></div>
-          </div>
-          <ul v-if="riskItems.length" class="rc-list">
-            <li v-for="it in riskItems" :key="it.id" @click="router.push('/orders/' + it.id)">
-              <StatusTag :status="it.status" />
-              <b class="rc-order">{{ it.id }}</b>
-              <span class="rc-name" :title="it.title">{{ it.title }}</span>
-              <span class="rc-days" :class="it.days_left < 0 ? 'danger' : 'warn'">{{ it.days_left < 0 ? '逾期 ' + (-it.days_left) + ' 天' : it.days_left === 0 ? '今天到期' : '剩 ' + it.days_left + ' 天' }}</span>
-            </li>
-          </ul>
-          <EmptyState v-else compact icon="ri:shield-check-line" title="暂无交期风险" description="所有进行中订单都在安全期内" />
+        <div class="rc-counts">
+          <div class="rc-count danger"><b>{{ risk.summary?.overdue ?? 0 }}</b><span>已逾期</span></div>
+          <div class="rc-count warn"><b>{{ risk.summary?.soon ?? 0 }}</b><span>即将到期</span></div>
         </div>
+        <ul v-if="riskItems.length" class="rc-list">
+          <li v-for="it in riskItems" :key="it.id" @click="router.push('/orders/' + it.id)">
+            <StatusTag :status="it.status" />
+            <b class="rc-order">{{ it.id }}</b>
+            <span class="rc-name" :title="it.title">{{ it.title }}</span>
+            <span class="rc-days" :class="it.days_left < 0 ? 'danger' : 'warn'">{{ it.days_left < 0 ? '逾期 ' + (-it.days_left) + ' 天' : it.days_left === 0 ? '今天到期' : '剩 ' + it.days_left + ' 天' }}</span>
+          </li>
+        </ul>
+        <div v-else class="rc-empty">
+          <Icon icon="ri:shield-check-line" />
+          <span>暂无交期风险，所有进行中订单都在安全期内</span>
+        </div>
+        <router-link to="/orders" class="link rc-link">查看全部 <Icon icon="ri:arrow-right-s-line" /></router-link>
       </section>
 
       <div v-if="error" class="error-card art-card">
@@ -101,7 +113,7 @@
         class="dash-grid" :class="gridActive ? 'grid-stack' : 'dash-grid-static'"
       >
         <!-- 订单趋势 -->
-        <div class="grid-stack-item" gs-id="trend" gs-w="8" gs-h="13" gs-min-w="4" gs-min-h="9">
+        <div class="grid-stack-item" gs-id="trend" gs-w="8" gs-h="14" gs-min-w="4" gs-min-h="9">
           <div class="grid-stack-item-content">
             <div class="dash-card">
               <div class="dc-head gs-head">
@@ -117,7 +129,7 @@
         </div>
 
         <!-- 本月概览 -->
-        <div class="grid-stack-item" gs-id="overview" gs-w="4" gs-h="13" gs-min-w="3" gs-min-h="9">
+        <div class="grid-stack-item" gs-id="overview" gs-w="4" gs-h="14" gs-min-w="3" gs-min-h="9">
           <div class="grid-stack-item-content">
             <div class="dash-card">
               <div class="dc-head gs-head">
@@ -174,7 +186,7 @@
         </div>
 
         <!-- 最近订单 -->
-        <div class="grid-stack-item" gs-id="recent" gs-w="5" gs-h="12" gs-min-w="3" gs-min-h="8">
+        <div class="grid-stack-item" gs-id="recent" gs-w="5" gs-h="14" gs-min-w="3" gs-min-h="8">
           <div class="grid-stack-item-content">
             <div class="dash-card">
               <div class="dc-head gs-head">
@@ -200,21 +212,23 @@
         </div>
 
         <!-- 交付提醒 -->
-        <div class="grid-stack-item" gs-id="due" gs-w="3" gs-h="12" gs-min-w="3" gs-min-h="8">
+        <div class="grid-stack-item" gs-id="due" gs-w="3" gs-h="14" gs-min-w="3" gs-min-h="8">
           <div class="grid-stack-item-content">
             <div class="dash-card">
               <div class="dc-head gs-head">
                 <div><h4>交付提醒</h4><p>7 天内到期 · 含逾期</p></div>
                 <span v-if="overdueCount" class="danger-badge">{{ overdueCount }} 逾期</span>
               </div>
-              <div v-if="dueList.length" class="row-list due-list">
-                <button v-for="d in dueList" :key="d.id" class="data-row due-row" @click="router.push(`/orders/${d.id}`)">
-                  <span class="due-chip" :class="dueClass(d.days_left)">{{ dueText(d.days_left) }}</span>
-                  <span class="row-main">
-                    <span class="row-title">{{ d.title }}</span>
-                    <span class="row-sub mono">{{ d.id }} · {{ d.deadline }}</span>
-                  </span>
-                </button>
+              <div v-if="dueList.length" class="due-wrap">
+                <div class="row-list due-list">
+                  <button v-for="d in dueList" :key="d.id" class="data-row due-row" @click="router.push(`/orders/${d.id}`)">
+                    <span class="due-chip" :class="dueClass(d.days_left)">{{ dueText(d.days_left) }}</span>
+                    <span class="row-main">
+                      <span class="row-title">{{ d.title }}</span>
+                      <span class="row-sub mono">{{ d.id }} · {{ d.deadline }}</span>
+                    </span>
+                  </button>
+                </div>
                 <div class="due-foot">共 {{ dueList.length }} 条临期<router-link to="/orders">处理订单 →</router-link></div>
               </div>
               <EmptyState v-else compact icon="ri:checkbox-circle-line" title="近期没有临期交付" description="7 天内到期的进行中订单会显示在这里" tone="var(--success)" />
@@ -223,7 +237,7 @@
         </div>
 
         <!-- 项目类型分布 -->
-        <div class="grid-stack-item" gs-id="cat" gs-w="4" gs-h="12" gs-min-w="3" gs-min-h="9">
+        <div class="grid-stack-item" gs-id="cat" gs-w="4" gs-h="14" gs-min-w="3" gs-min-h="9">
           <div class="grid-stack-item-content">
             <div class="dash-card">
               <div class="dc-head gs-head">
@@ -249,7 +263,7 @@
         </div>
 
         <!-- 运营健康度 -->
-        <div class="grid-stack-item" gs-id="radar" gs-w="4" gs-h="11" gs-min-w="3" gs-min-h="9">
+        <div class="grid-stack-item" gs-id="radar" gs-w="4" gs-h="12" gs-min-w="3" gs-min-h="9">
           <div class="grid-stack-item-content">
             <div class="dash-card">
               <div class="dc-head gs-head">
@@ -270,7 +284,7 @@
         </div>
 
         <!-- 代理排行 -->
-        <div v-if="auth.isAdmin" class="grid-stack-item" gs-id="rank" gs-w="4" gs-h="11" gs-min-w="3" gs-min-h="8">
+        <div v-if="auth.isAdmin" class="grid-stack-item" gs-id="rank" gs-w="4" gs-h="12" gs-min-w="3" gs-min-h="8">
           <div class="grid-stack-item-content">
             <div class="dash-card">
               <div class="dc-head gs-head">
@@ -295,7 +309,7 @@
         </div>
 
         <!-- 热力图 -->
-        <div class="grid-stack-item" gs-id="heat" gs-w="4" gs-h="11" gs-min-w="3" gs-min-h="8">
+        <div class="grid-stack-item" gs-id="heat" gs-w="4" gs-h="12" gs-min-w="3" gs-min-h="8">
           <div class="grid-stack-item-content">
             <div class="dash-card">
               <div class="dc-head gs-head">
@@ -404,7 +418,7 @@ const data = ref({
   agent_rank: [], recent: [], due_soon: [], kpis: {}, radar: [], activity_heatmap: [],
 })
 const risk = ref({ days: 3, summary: {}, overdue: [], soon: [] })
-const riskItems = computed(() => [...(risk.value.overdue || []), ...(risk.value.soon || [])].slice(0, 5))
+const riskItems = computed(() => [...(risk.value.overdue || []), ...(risk.value.soon || [])].slice(0, 3))
 async function loadRisk() {
   try { risk.value = await http.get('/stats/deadline-risk', { params: { days: 3 } }) } catch { /* 非关键数据，忽略 */ }
 }
@@ -533,7 +547,7 @@ const radarOption = computed(() => {
     tooltip: artTooltip({ trigger: 'item' }),
     radar: {
       indicator: radarList.value.map((x) => ({ name: x.name, max: 100 })),
-      radius: '68%', center: ['50%', '50%'],
+      radius: '80%', center: ['50%', '50%'],
       axisName: { show: false },
       splitLine: { lineStyle: { color: dark ? 'rgba(255,255,255,.1)' : '#e6eaf0' } },
       axisLine: { lineStyle: { color: dark ? 'rgba(255,255,255,.1)' : '#e6eaf0' } },
@@ -556,8 +570,8 @@ const radarOption = computed(() => {
   }
 })
 
-const recent = computed(() => (data.value.recent || []).slice(0, 8))
-const dueList = computed(() => (data.value.due_soon || []).slice(0, 6))
+const recent = computed(() => (data.value.recent || []).slice(0, 6))
+const dueList = computed(() => (data.value.due_soon || []).slice(0, 4))
 const overdueCount = computed(() => dueList.value.filter((d) => d.days_left < 0).length)
 
 function dueClass(days) {
@@ -609,7 +623,10 @@ const meteors = Array.from({ length: 8 }, (_, i) => ({
 }))
 
 /* ===== GridStack ===== */
-const GRID_KEY = 'dash-grid-layout:v3:' + (auth.isAdmin ? 'admin' : 'user')
+// v4：工作台默认布局重新排版。旧的本地保存布局不再沿用，所有人都从新默认布局开始（之后仍可自行拖拽）。
+// 换键名是为了不动用户的其他本地数据；旧键在挂载时顺手清掉。
+const GRID_KEY = 'dash-grid-layout:v4:' + (auth.isAdmin ? 'admin' : 'user')
+const LEGACY_GRID_KEYS = ['dash-grid-layout:v3:admin', 'dash-grid-layout:v3:user']
 const GRID_COLS = 12
 const GRID_BREAKPOINT = 1200
 function gridCellHeight() {
@@ -622,26 +639,27 @@ const GRID_OPTIONS = {
   handle: '.gs-head', resizable: { handles: 'se' }, animate: true,
   float: true, // 拖动 / 缩放后自动上移补位，不留空洞
 }
-// 管理员默认布局（含「代理业绩榜」卡片）
+// 管理员默认布局（含「代理排行」卡片）：三行，前两行等高。
+// 注意网格的一行是 22px（含间距）：h=14 的卡片约 308px，刚好放标题 + 图表或列表。
 const DEFAULT_LAYOUT = [
-  { id: 'trend', x: 0, y: 0, w: 8, h: 17 },
-  { id: 'overview', x: 8, y: 0, w: 4, h: 17 },
-  { id: 'recent', x: 0, y: 17, w: 5, h: 13 },
-  { id: 'due', x: 5, y: 17, w: 3, h: 13 },
-  { id: 'cat', x: 8, y: 17, w: 4, h: 13 },
-  { id: 'rank', x: 0, y: 30, w: 4, h: 11 },
-  { id: 'heat', x: 4, y: 30, w: 4, h: 11 },
-  { id: 'radar', x: 8, y: 30, w: 4, h: 11 },
+  { id: 'trend', x: 0, y: 0, w: 8, h: 14 },
+  { id: 'overview', x: 8, y: 0, w: 4, h: 14 },
+  { id: 'recent', x: 0, y: 14, w: 5, h: 14 },
+  { id: 'due', x: 5, y: 14, w: 3, h: 14 },
+  { id: 'cat', x: 8, y: 14, w: 4, h: 14 },
+  { id: 'rank', x: 0, y: 28, w: 4, h: 12 },
+  { id: 'heat', x: 4, y: 28, w: 4, h: 12 },
+  { id: 'radar', x: 8, y: 28, w: 4, h: 12 },
 ]
-// 普通用户默认布局：没有业绩榜卡片，热力图与雷达图各占一半
+// 普通用户默认布局：没有代理排行卡片，热力图与雷达图各占一半
 const DEFAULT_LAYOUT_USER = [
-  { id: 'trend', x: 0, y: 0, w: 8, h: 17 },
-  { id: 'overview', x: 8, y: 0, w: 4, h: 17 },
-  { id: 'recent', x: 0, y: 17, w: 5, h: 13 },
-  { id: 'due', x: 5, y: 17, w: 3, h: 13 },
-  { id: 'cat', x: 8, y: 17, w: 4, h: 13 },
-  { id: 'heat', x: 0, y: 30, w: 6, h: 10 },
-  { id: 'radar', x: 6, y: 30, w: 6, h: 10 },
+  { id: 'trend', x: 0, y: 0, w: 8, h: 14 },
+  { id: 'overview', x: 8, y: 0, w: 4, h: 14 },
+  { id: 'recent', x: 0, y: 14, w: 5, h: 14 },
+  { id: 'due', x: 5, y: 14, w: 3, h: 14 },
+  { id: 'cat', x: 8, y: 14, w: 4, h: 14 },
+  { id: 'heat', x: 0, y: 28, w: 6, h: 12 },
+  { id: 'radar', x: 6, y: 28, w: 6, h: 12 },
 ]
 
 const gridEl = ref(null)
@@ -761,6 +779,11 @@ async function resetLayout() {
   if (grid) grid.load(source.filter((n) => currentDomIds().has(n.id)).map((n) => ({ ...n })), false)
   ElMessage.success('已恢复默认布局')
 }
+/** 横幅「布局」下拉的命令 */
+function onLayoutCommand(cmd) {
+  if (cmd === 'reset') resetLayout()
+  else if (cmd === 'save') saveAsDefault()
+}
 /** 把当前排列存为默认布局（管理员 / 代理可用），之后「重置布局」会回到它 */
 async function saveAsDefault() {
   if (!grid) return
@@ -794,6 +817,9 @@ async function load() {
 }
 
 onMounted(() => {
+  for (const key of LEGACY_GRID_KEYS) {
+    try { localStorage.removeItem(key) } catch { /* 忽略 */ }
+  }
   gridActive.value = window.innerWidth > GRID_BREAKPOINT
   window.addEventListener('resize', onGridResize)
   load()
@@ -861,13 +887,13 @@ const reportHtml = computed(() => {
 </script>
 
 <style scoped>
-.dashboard { display: flex; flex-direction: column; gap: 18px; }
+.dashboard { display: flex; flex-direction: column; gap: 14px; }
 
 /* ===== 欢迎横幅 ===== */
 .welcome {
   position: relative; overflow: hidden;
   display: flex; align-items: center; justify-content: space-between; gap: 24px;
-  padding: 26px 28px;
+  padding: 18px 22px;
   background:
     radial-gradient(900px 220px at 8% -30%, rgba(93, 135, 255, 0.32), transparent 60%),
     radial-gradient(700px 260px at 92% 120%, rgba(19, 222, 185, 0.16), transparent 60%),
@@ -900,15 +926,15 @@ html.light .welcome {
   border-radius: 50%; background: #fff; box-shadow: 0 0 10px rgba(255,255,255,.8);
 }
 html.light .meteor { display: none; }
-.welcome-main { position: relative; z-index: 1; min-width: 0; }
+.welcome-main { position: relative; z-index: 1; flex: 1; min-width: 0; }
+/* 第二行：标题与操作按钮并排 */
+.welcome-row { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; margin-top: 8px; }
 .welcome-eyebrow { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: rgba(255,255,255,.72); font-weight: 500; }
 html.light .welcome-eyebrow { color: var(--text-2); }
 .live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--success); box-shadow: 0 0 10px var(--success); }
-.welcome-title { margin: 10px 0 0; font-size: 26px; line-height: 1.25; font-weight: 700; letter-spacing: -0.5px; color: #fff; }
+.welcome-title { margin: 0; font-size: 22px; line-height: 1.25; font-weight: 700; letter-spacing: -0.4px; color: #fff; white-space: nowrap; }
 html.light .welcome-title { color: var(--text); }
-.welcome-sub { margin: 7px 0 0; font-size: 12.5px; color: rgba(255,255,255,.55); }
-html.light .welcome-sub { color: var(--text-3); }
-.welcome-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 18px; }
+.welcome-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .w-btn {
   height: 34px; padding: 0 13px; display: inline-flex; align-items: center; gap: 6px;
   border-radius: var(--radius-sm); border: 1px solid rgba(255,255,255,.16);
@@ -924,13 +950,13 @@ html.light .w-btn { border-color: var(--border-2); background: var(--card); colo
 html.light .w-btn.primary { background: var(--brand); border-color: var(--brand); color: #fff; }
 .welcome-side { position: relative; z-index: 1; display: flex; gap: 10px; flex: none; }
 .ws-cell {
-  min-width: 84px; padding: 12px 14px; border-radius: var(--radius);
+  min-width: 84px; padding: 8px 14px; border-radius: var(--radius);
   background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1);
-  display: flex; flex-direction: column; gap: 4px;
+  display: flex; flex-direction: column; gap: 2px;
   backdrop-filter: blur(8px);
 }
 .ws-cell span { font-size: 10.5px; color: rgba(255,255,255,.55); }
-.ws-cell b { font-size: 19px; color: #fff; font-variant-numeric: tabular-nums; }
+.ws-cell b { font-size: 18px; color: #fff; font-variant-numeric: tabular-nums; }
 html.light .ws-cell { background: rgba(255,255,255,.7); border-color: var(--border); }
 html.light .ws-cell span { color: var(--text-3); }
 html.light .ws-cell b { color: var(--text); }
@@ -939,24 +965,22 @@ html.light .ws-cell b { color: var(--text); }
 
 .error-card { padding: 0; }
 
-/* ===== 交期风险 ===== */
-.risk-card { padding: 15px 18px; }
-.rc-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
-.rc-title { display: flex; align-items: center; gap: 10px; min-width: 0; }
+/* ===== 交期风险：横向状态条 ===== */
+.risk-card { display: flex; align-items: center; gap: 18px; padding: 14px 18px; }
+.rc-title { display: flex; align-items: center; gap: 10px; flex: none; }
 .rc-ico {
-  width: 32px; height: 32px; border-radius: 10px; flex: none;
+  width: 36px; height: 36px; border-radius: 10px; flex: none;
   display: flex; align-items: center; justify-content: center;
-  font-size: 17px; color: var(--warning); background: var(--warning-weak);
+  font-size: 18px; color: var(--warning); background: var(--warning-weak);
 }
-.rc-title h4 { margin: 0; font-size: 14px; font-weight: 600; }
-.rc-title p { margin: 2px 0 0; font-size: 11px; color: var(--text-3); }
-.rc-body { display: flex; align-items: center; gap: 18px; }
+.rc-title h4 { margin: 0; font-size: 14px; font-weight: 600; white-space: nowrap; }
+.rc-title p { margin: 2px 0 0; font-size: 11px; color: var(--text-3); white-space: nowrap; }
 .rc-counts { display: flex; gap: 10px; flex: none; }
 .rc-count {
-  min-width: 96px; padding: 10px 14px; border-radius: var(--radius-sm);
-  display: flex; flex-direction: column; gap: 2px; border: 1px solid transparent;
+  display: flex; align-items: baseline; gap: 6px; padding: 5px 12px; border-radius: var(--radius-sm);
+  border: 1px solid transparent;
 }
-.rc-count b { font-size: 22px; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.rc-count b { font-size: 20px; line-height: 1.15; font-variant-numeric: tabular-nums; }
 .rc-count span { font-size: 11px; }
 .rc-count.danger { background: var(--danger-weak); border-color: rgba(255,77,79,.16); }
 .rc-count.danger b { color: var(--danger); }
@@ -976,9 +1000,17 @@ html.light .ws-cell b { color: var(--text); }
 .rc-days { flex: none; font-size: 11px; font-weight: 600; padding: 1px 8px; border-radius: 999px; }
 .rc-days.danger { background: var(--danger-weak); color: var(--danger); }
 .rc-days.warn { background: var(--warning-weak); color: var(--warning); }
-@media (max-width: 900px) {
-  .rc-body { flex-direction: column; align-items: stretch; }
-  .rc-count { flex: 1; min-width: 0; }
+.rc-empty {
+  flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px;
+  padding: 6px 4px; font-size: 12.5px; color: var(--text-3);
+}
+.rc-empty svg { flex: none; font-size: 22px; color: var(--success); }
+.rc-link { flex: none; white-space: nowrap; }
+/* 窄屏：标题与计数一行，明细另起一行 */
+@media (max-width: 1100px) {
+  .risk-card { flex-wrap: wrap; row-gap: 12px; }
+  .rc-list, .rc-empty { flex: 1 1 100%; order: 3; }
+  .rc-link { margin-left: auto; }
 }
 
 /* ===== 网格 ===== */
@@ -1040,11 +1072,11 @@ html.light .ws-cell b { color: var(--text); }
 .ov-gross b { color: var(--success); }
 .ov-mini-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
 .ov-mini {
-  padding: 9px 11px; background: var(--card-2); border: 1px solid var(--border);
+  padding: 7px 10px; background: var(--card-2); border: 1px solid var(--border);
   border-radius: var(--radius-sm); display: flex; flex-direction: column; gap: 2px;
 }
 .ov-mini b { font-size: 16px; color: var(--text); font-variant-numeric: tabular-nums; }
-.ov-mini span { font-size: 10.5px; color: var(--text-3); }
+.ov-mini span { font-size: 10.5px; color: var(--text-3); white-space: nowrap; }
 .status-bar { display: flex; gap: 2px; height: 6px; border-radius: 3px; overflow: hidden; background: var(--card-2); }
 .status-bar span { transition: width .4s ease; }
 .status-legend { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px 12px; }
@@ -1078,7 +1110,9 @@ html.light .ws-cell b { color: var(--text); }
 .due-chip.today { background: var(--warning-weak); color: var(--warning); }
 .due-chip.soon { background: rgba(255,174,31,.1); color: #e0a13a; }
 .due-chip.far { background: var(--card-2); color: var(--text-3); }
-.due-foot { margin-top: auto; border-top: 1px solid var(--border); padding-top: 9px; font-size: 11px; color: var(--text-3); display: flex; justify-content: space-between; }
+.due-wrap { flex: 1 1 0; min-height: 0; display: flex; flex-direction: column; }
+.due-list { flex: 1 1 0; }
+.due-foot { flex: none; margin-top: 8px; border-top: 1px solid var(--border); padding-top: 8px; font-size: 11px; color: var(--text-3); display: flex; justify-content: space-between; }
 .due-foot a { font-size: 11px; }
 .danger-badge { font-size: 10px; color: var(--danger); background: var(--danger-weak); border: 1px solid rgba(255,77,79,.2); padding: 1px 7px; border-radius: 999px; }
 
@@ -1110,7 +1144,7 @@ html.light .ws-cell b { color: var(--text); }
 .rl-item b { color: var(--text); font-variant-numeric: tabular-nums; }
 
 /* 排行 */
-.rank-list { display: flex; flex-direction: column; gap: 10px; }
+.rank-list { flex: 1 1 0; min-height: 0; overflow: auto; display: flex; flex-direction: column; justify-content: flex-start; gap: 10px; padding-top: 6px; }
 .rank-row { display: flex; align-items: center; gap: 10px; }
 .rank-no { width: 22px; height: 22px; border-radius: 7px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; color: var(--text-3); background: var(--card-2); }
 .rank-no.top { background: var(--brand-grad); color: #fff; }
